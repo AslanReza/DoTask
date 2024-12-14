@@ -1,0 +1,73 @@
+# Contributing to Ontask
+
+First off, thank you for considering contributing to Ontask! 🎉
+
+The following is a guide to help you get started with contributing. Please take a moment to review these guidelines before submitting your contributions.
+
+## How to Contribute
+
+### 1. Fork the repository
+
+Start by forking the repository to your own GitHub account. You can do this by clicking the "Fork" button in the upper-right corner of the project’s GitHub page.
+
+### 2. Clone your fork
+
+Clone the forked repository to your local machine using:
+
+```bash
+git clone https://github.com/yourusername/ontask.git
+```
+
+### 3. Create a new branch
+
+Create a new branch for your changes. Make sure to name it descriptively:
+
+```bash
+git checkout -b your-branch-name
+```
+
+### 4. Make your changes
+
+Make your changes locally. Please ensure that your code adheres to the project’s coding style, and try to avoid introducing breaking changes unless absolutely necessary.
+
+### 5. Commit your changes
+
+After making your changes, commit them with a clear message describing what was done:
+
+```bash
+git commit -m "Describe your changes here"
+```
+
+### 6. Push your changes
+
+Push your changes to your forked repository:
+
+```bash
+git push origin your-branch-name
+```
+
+### 7. Create a pull request
+
+Go to your fork on GitHub and open a pull request to the main repository. Include a clear description of the changes you made and why you made them.
+
+## Code Style
+
+- Please follow consistent code formatting. Refer to existing code for conventions.
+- Use meaningful names for variables, functions, and classes.
+- Write clear and concise commit messages.
+
+## Reporting Issues
+
+If you find any bugs or have feature requests, please open an issue on the GitHub repository. Be sure to include as much detail as possible, such as:
+
+- Steps to reproduce the bug
+- Expected vs. actual behavior
+- Any relevant logs or error messages
+
+## Code of Conduct
+
+Please be respectful and considerate when interacting with others. Follow the project's [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Questions?
+
+Feel free to open an issue or reach out to me directly at [aslanreza77@gmail.com].

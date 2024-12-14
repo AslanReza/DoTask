@@ -1,0 +1,38 @@
+{
+    "extends": [
+        "config:base"
+    ],
+    "automerge": true,
+    "automergeType": "branch",
+    "major": {
+        "enabled": true,
+        "automerge": false
+    },
+    "minor": {
+        "enabled": true
+    },
+    "patch": {
+        "enabled": true
+    },
+    "packageRules": [
+        {
+            "matchPackagePatterns": [
+                "^react",
+                "^react-dom"
+            ],
+            "groupName": "React packages",
+            "automerge": true
+        },
+        {
+            "matchPackagePatterns": [
+                "^@babel"
+            ],
+            "automerge": true
+        }
+    ],
+    "enabled": true,
+    "timezone": "UTC",
+    "schedule": [
+        "before 5am on Monday"
+    ]
+}

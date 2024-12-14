@@ -1,0 +1,39 @@
+# Makefile for Ontask React Project
+
+# Default target
+.PHONY: all install start build test lint clean
+
+# Install dependencies
+install:
+	@echo "Installing dependencies..."
+	npm install
+
+# Start development server
+start:
+	@echo "Starting development server..."
+	npm start
+
+# Build the project for production
+build:
+	@echo "Building the project for production..."
+	npm run build
+
+# Run tests
+test:
+	@echo "Running tests..."
+	npm test
+
+# Lint the project
+lint:
+	@echo "Linting the project..."
+	npm run lint
+
+# Clean the build (remove node_modules and build directory)
+clean:
+	@echo "Cleaning up the project..."
+	rm -rf node_modules
+	rm -rf build
+	npm cache clean --force
+
+# Run the project (builds and starts it)
+run: clean install build start
