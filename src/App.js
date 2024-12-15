@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-
+import TasksPage from './pages/TasksPage'
 import './App.css'
 
 function App() {
@@ -19,7 +19,7 @@ function App() {
           </div>
         </nav>
         <Routes>
-          <Route path="/" element={<div>Tasks Page</div>} />
+          <Route path="/" element={<TasksPage />} />
           <Route path="/new" element={<div>New Task Page</div>} />
         </Routes>
       </div>
