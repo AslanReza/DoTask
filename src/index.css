@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Playwrite+GB+S+Guides:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik+80s+Fade&family=Sen:wght@400..800&family=Signika+Negative:wght@300..700&family=Silkscreen:wght@400;700&family=Varela+Round&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Sen:wght@400..800&family=Signika+Negative:wght@300..700&family=Varela+Round&display=swap');
+* {
+  box-sizing: border-box;
+}
+body {
+  background-color: rgb(23, 23, 23);
+  font-family: 'Poppins', sans-serif;
+}
+.rubik-80s-fade-regular {
+  font-family: 'Rubik 80s Fade', system-ui;
+}
+h1 {
+  font-family: 'Rubik 80s Fade', system-ui;
+}
