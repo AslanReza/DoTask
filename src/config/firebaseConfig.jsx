@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore'
 
 // Firebase configuration object
 const firebaseConfig = {
-  apiKey: 'AIzaSyCCJ7tP86x8-4Dd5hIE0qG3euSU6elMqB0',
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: 'ontask-7a3d6.firebaseapp.com',
   projectId: 'ontask-7a3d6',
   storageBucket: 'ontask-7a3d6.firebasestorage.app',
