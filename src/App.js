@@ -14,7 +14,7 @@ import PrivateRoute from './components/PrivateRoute'
 import Footer from './components/Footer'
 import EditTaskPage from './pages/EditTaskPage'
 import ArchivedTasksPage from './pages/ArchivedTasksPage'
-
+import ProfilePage from './pages/ProfilePage'
 const App = () => {
   return (
     <Router>
@@ -42,6 +42,7 @@ const App = () => {
         />
         <Route path="/edit-task/:taskId" element={<EditTaskPage />} />
         <Route path="/archived-tasks" element={<ArchivedTasksPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
       </Routes>
       <Footer />
     </Router>
