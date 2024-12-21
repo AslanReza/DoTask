@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onSnapshot } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
+import { SiMattermost } from 'react-icons/si'
+import { BsTelegram } from 'react-icons/bs'
+import { FaGithub } from 'react-icons/fa'
 import {
   collection,
   query,
@@ -15,6 +18,7 @@ import { MdRemoveDone } from 'react-icons/md'
 import { BiSolidMessageSquareEdit } from 'react-icons/bi'
 import { useAuth } from '../context/AuthContext'
 import { IoSettings } from 'react-icons/io5'
+import { FaClipboardCheck } from 'react-icons/fa6'
 import { MdAddTask } from 'react-icons/md'
 import { IoMdLogOut } from 'react-icons/io'
 import { MdOutlineArchive } from 'react-icons/md'
@@ -27,8 +31,11 @@ const TasksPage = () => {
   const [showModal, setShowModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [taskToShare, setTaskToShare] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [taskToDelete, setTaskToDelete] = useState(null)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [copyMessage, setCopyMessage] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -65,7 +72,6 @@ const TasksPage = () => {
 
     fetchTasks()
 
-    // Real-time listener setup
     const tasksRef = collection(db, 'tasks')
     const queryInstance = query(
       tasksRef,
@@ -88,7 +94,7 @@ const TasksPage = () => {
       }
     })
 
-    return () => unsubscribe() // Cleanup the listener on unmount
+    return () => unsubscribe()
   }, [user])
 
   const openTaskModal = (task) => {
@@ -139,11 +145,17 @@ const TasksPage = () => {
     }
   }
 
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text)
+    setCopyMessage('Copied!')
+    setTimeout(() => setCopyMessage(''), 2000)
+  }
+
   const handleArchiveTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
       await updateDoc(taskRef, { archived: true })
-      setTasks(tasks.filter((task) => task.id !== taskId)) // Remove archived task from list
+      setTasks(tasks.filter((task) => task.id !== taskId))
     } catch (error) {
       console.error('Error archiving task:', error)
     }
@@ -153,9 +165,20 @@ const TasksPage = () => {
     try {
       await deleteDoc(doc(db, 'tasks', taskId))
       setTasks(tasks.filter((task) => task.id !== taskId))
+      closeDeleteModal()
     } catch (error) {
       console.error('Error deleting task:', error)
     }
+  }
+
+  const openDeleteModal = (task) => {
+    setTaskToDelete(task)
+    setShowDeleteModal(true)
+  }
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false)
+    setTaskToDelete(null)
   }
 
   return (
@@ -186,11 +209,11 @@ const TasksPage = () => {
             <MdOutlineArchive />
           </button>
           <button
-            onClick={() => navigate('/setting')}
+            onClick={() => navigate('/profile')}
             className="bg-neutral-600 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
           >
             <span className="text-xs group-hover:inline-block hidden">
-              Setting
+              Profile
             </span>
             <IoSettings />
           </button>
@@ -246,7 +269,7 @@ const TasksPage = () => {
               <div className="flex justify-end items-center text-xl gap-4">
                 <div className="group relative flex items-center">
                   <button
-                    onClick={() => handleDeleteTask(task.id)}
+                    onClick={() => openDeleteModal(task)}
                     className="text-red-500 hover:text-red-400 flex items-center relative overflow-hidden"
                   >
                     <RiDeleteBin2Fill />
@@ -312,44 +335,123 @@ const TasksPage = () => {
       </div>
 
       {/* Modals */}
+      {/* Share Modal */}
       {showShareModal && taskToShare && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          {copyMessage && (
+            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-md shadow-lg z-50">
+              {copyMessage}
+            </div>
+          )}
           <div className="bg-neutral-800 px-6 pb-6 pt-2 rounded-lg shadow-lg text-center text-white relative">
             <button
               onClick={closeShareModal}
-              className="absolute top-2 right-2 text-red-500 text-2xl"
+              className="absolute top-0 right-2 text-red-500 text-2xl rounded-full"
             >
               &times;
             </button>
-            <h2 className="text-2xl mb-4">Share Task</h2>
+            <h1 className="text-2xl mb-4">Share Task</h1>
             <p className="text-lg mb-4">{taskToShare.title}</p>
-            <p>{taskToShare.description}</p>
-            <button
-              onClick={closeShareModal}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white mt-4"
-            >
-              Close
-            </button>
+            <div className="mb-4">
+              <p className="text-gray-400 mb-2">Task Link:</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={`${window.location.origin}/tasks/${taskToShare.id}`}
+                  readOnly
+                  className="w-full text-xs text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md bg-neutral-700 cursor-pointer"
+                  onClick={(e) => e.target.select()}
+                />
+                <button
+                  onClick={() =>
+                    handleCopy(
+                      `${window.location.origin}/tasks/${taskToShare.id}`
+                    )
+                  }
+                  className="text-green-500 hover:text-green-400 text-lg p-1 rounded-full bg-neutral-950"
+                  title="Copy to clipboard"
+                >
+                  <i>
+                    <FaClipboardCheck />
+                  </i>
+                </button>
+              </div>
+            </div>
+
+            {/* Social Media Buttons */}
+            <div className="flex justify-center gap-6 mt-4">
+              <button
+                onClick={() =>
+                  handleCopy(
+                    `Check out this task: ${taskToShare.title}\n${window.location.origin}/tasks/${taskToShare.id}`
+                  )
+                }
+                className="text-blue-500 hover:text-blue-400 flex items-center gap-2"
+                title="Copy Mattermost link"
+              >
+                <i className="text-2xl">
+                  <SiMattermost />
+                </i>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleCopy(
+                    `Check out this task on GitHub: ${window.location.origin}/tasks/${taskToShare.id}`
+                  )
+                }
+                className="text-gray-400 hover:text-gray-300 flex items-center gap-2"
+                title="Copy GitHub link"
+              >
+                <i className="text-2xl">
+                  <FaGithub />
+                </i>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleCopy(
+                    `${taskToShare.title} - ${window.location.origin}/tasks/${taskToShare.id}`
+                  )
+                }
+                className="text-blue-400 hover:text-blue-300 flex items-center gap-2"
+                title="Copy Telegram link"
+              >
+                <i className="text-2xl">
+                  <BsTelegram />
+                </i>
+              </button>
+            </div>
           </div>
         </div>
       )}
-      {showModal && selectedTask && (
+
+      {/* Delete Modal */}
+      {showDeleteModal && taskToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-neutral-800 px-6 pb-6 pt-2 rounded-lg shadow-lg text-center text-white relative">
             <button
-              onClick={closeTaskModal}
-              className="absolute top-2 left-2 text-red-500 text-2xl"
+              onClick={closeDeleteModal}
+              className="absolute top-0 right-2 text-red-500 text-2xl rounded-full"
             >
               &times;
             </button>
-            <h2 className="text-2xl mb-4">{selectedTask.title}</h2>
-            <p className="text-neutral-200 mb-4">{selectedTask.description}</p>
-            <button
-              onClick={closeTaskModal}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white mt-4"
-            >
-              Close
-            </button>
+            <h2 className="text-2xl m-4 text-red-600">Are you sure?</h2>
+            <p className="mb-4">{taskToDelete.title}</p>
+            <div className="flex justify-center gap-1">
+              <button
+                onClick={() => handleDeleteTask(taskToDelete.id)}
+                className="px-8 py-1 bg-red-600 hover:bg-red-700 rounded-md text-red-100"
+              >
+                Delete
+              </button>
+              <button
+                onClick={closeDeleteModal}
+                className="px-4 py-1 bg-green-600 hover:bg-green-700 rounded-md text-green-100"
+              >
+                Keep
+              </button>
+            </div>
           </div>
         </div>
       )}
