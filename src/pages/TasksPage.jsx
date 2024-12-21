@@ -1,21 +1,358 @@
-import React from 'react'
-const tasks = [
-  { id: 1, title: 'Task 1', description: 'Text 1' },
-  { id: 2, title: 'Task 2', description: 'Text 2' },
-  { id: 3, title: 'Task 3', description: 'Text 3' },
-]
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { onSnapshot } from 'firebase/firestore'
+import { db } from '../config/firebaseConfig'
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from 'firebase/firestore'
+import { MdRemoveDone } from 'react-icons/md'
+import { BiSolidMessageSquareEdit } from 'react-icons/bi'
+import { useAuth } from '../context/AuthContext'
+import { IoSettings } from 'react-icons/io5'
+import { MdAddTask } from 'react-icons/md'
+import { IoMdLogOut } from 'react-icons/io'
+import { MdOutlineArchive } from 'react-icons/md'
+import { FaEdit, FaCheckCircle, FaShareAlt } from 'react-icons/fa'
+import { RiDeleteBin2Fill } from 'react-icons/ri'
+
 const TasksPage = () => {
+  const [tasks, setTasks] = useState([])
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [showModal, setShowModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [taskToShare, setTaskToShare] = useState(null)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!user) {
+      console.log('User is not authenticated')
+      return
+    }
+
+    const fetchTasks = async () => {
+      const tasksRef = collection(db, 'tasks')
+      const q = query(
+        tasksRef,
+        where('userId', '==', user.uid),
+        where('archived', '==', false)
+      )
+
+      try {
+        const snapshot = await getDocs(q)
+        if (snapshot.empty) {
+          console.log('No tasks found using getDocs')
+        } else {
+          console.log('Tasks fetched using getDocs:', snapshot.docs)
+          setTasks(
+            snapshot.docs.map((doc) => ({
+              id: doc.id,
+              edited: doc.data().edited || false,
+              ...doc.data(),
+            }))
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching tasks with getDocs:', error)
+      }
+    }
+
+    fetchTasks()
+
+    // Real-time listener setup
+    const tasksRef = collection(db, 'tasks')
+    const queryInstance = query(
+      tasksRef,
+      where('userId', '==', user.uid),
+      where('archived', '==', false)
+    )
+
+    const unsubscribe = onSnapshot(queryInstance, (snapshot) => {
+      if (snapshot.empty) {
+        console.log('No tasks found using onSnapshot')
+      } else {
+        console.log('Tasks fetched using onSnapshot:', snapshot.docs)
+        setTasks(
+          snapshot.docs.map((doc) => ({
+            id: doc.id,
+            edited: doc.data().edited || false,
+            ...doc.data(),
+          }))
+        )
+      }
+    })
+
+    return () => unsubscribe() // Cleanup the listener on unmount
+  }, [user])
+
+  const openTaskModal = (task) => {
+    setSelectedTask(task)
+    setShowModal(true)
+  }
+
+  const closeTaskModal = () => {
+    setShowModal(false)
+    setSelectedTask(null)
+  }
+
+  const openShareModal = (task) => {
+    setTaskToShare(task)
+    setShowShareModal(true)
+  }
+
+  const closeShareModal = () => {
+    setShowShareModal(false)
+    setTaskToShare(null)
+  }
+
+  const handleCompleteTask = async (taskId) => {
+    const taskRef = doc(db, 'tasks', taskId)
+    try {
+      await updateDoc(taskRef, { completed: true })
+      setTasks(
+        tasks.map((task) =>
+          task.id === taskId ? { ...task, completed: true } : task
+        )
+      )
+    } catch (error) {
+      console.error('Error marking task as complete:', error)
+    }
+  }
+
+  const handleUndoCompleteTask = async (taskId) => {
+    const taskRef = doc(db, 'tasks', taskId)
+    try {
+      await updateDoc(taskRef, { completed: false })
+      setTasks(
+        tasks.map((task) =>
+          task.id === taskId ? { ...task, completed: false } : task
+        )
+      )
+    } catch (error) {
+      console.error('Error undoing task completion:', error)
+    }
+  }
+
+  const handleArchiveTask = async (taskId) => {
+    const taskRef = doc(db, 'tasks', taskId)
+    try {
+      await updateDoc(taskRef, { archived: true })
+      setTasks(tasks.filter((task) => task.id !== taskId)) // Remove archived task from list
+    } catch (error) {
+      console.error('Error archiving task:', error)
+    }
+  }
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await deleteDoc(doc(db, 'tasks', taskId))
+      setTasks(tasks.filter((task) => task.id !== taskId))
+    } catch (error) {
+      console.error('Error deleting task:', error)
+    }
+  }
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Your Tasks</h1>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {tasks.map((task) => (
-          <div key={task.id} className="p-4 bg-white shadow-neu rounded-lg">
-            <h2 className="font-semibold text-lg mb-2">{task.title}</h2>
-            <p className="text-gray-600">{task.description}</p>
-          </div>
-        ))}
+    <div>
+      {/* Navbar */}
+      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl rubik-80s-fade-regular">
+            <span className="text-sm text-green-500">On</span>Task
+          </h1>
+          <span className="text-neutral-400">|</span>
+          <button
+            onClick={() => navigate('/new-task')}
+            className="text-2xl flex items-center flex-row-reverse gap-1 bg-green-600 rounded-full p-1"
+          >
+            <span className="text-xs inline-block">New Task</span>
+            <MdAddTask />
+          </button>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/archived-tasks')}
+            className="bg-pink-600 p-1 hidden text-2xl items-center group sm:flex flex-row gap-1 rounded-full"
+          >
+            <span className="text-xs group-hover:inline-block hidden">
+              Archived
+            </span>
+            <MdOutlineArchive />
+          </button>
+          <button
+            onClick={() => navigate('/setting')}
+            className="bg-neutral-600 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
+          >
+            <span className="text-xs group-hover:inline-block hidden">
+              Setting
+            </span>
+            <IoSettings />
+          </button>
+          <button
+            onClick={logout}
+            className="bg-red-500 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
+          >
+            <span className="text-xs group-hover:inline-block hidden">
+              Log Out
+            </span>
+            <IoMdLogOut />
+          </button>
+        </div>
+      </nav>
+
+      {/* Task List */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 mt-16">
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <div
+              key={task.id}
+              className={`bg-neutral-700 p-4 rounded-lg shadow-md relative ${
+                task.completed ? 'opacity-70 border-[2px] border-green-600' : ''
+              }`}
+            >
+              {task.edited && (
+                <div className="absolute bottom-2 left-2 flex flex-row-reverse items-center text-yellow-500 text-xs p-1 rounded-full">
+                  <BiSolidMessageSquareEdit className="absolute left-[34px] top-[-3px]" />
+                  <span className="text-[10px]">Edited</span>
+                </div>
+              )}
+              {/* Complete Icon */}
+              <div className="absolute top-2 right-2 flex gap-3">
+                {task.completed && (
+                  <button
+                    onClick={() => handleUndoCompleteTask(task.id)}
+                    className="text-green-500 flex items-center gap-1 bg-neutral-800 rounded-full p-1 hover:bg-black hover:text-green-400"
+                  >
+                    <MdRemoveDone />
+                  </button>
+                )}
+              </div>
+
+              <h2
+                onClick={() => openTaskModal(task)}
+                className="font-semibold text-green-500 text-lg mb-2 cursor-pointer"
+              >
+                {task.title}
+              </h2>
+              <p className="text-gray-300 whitespace-pre-wrap mb-4">
+                {task.description}
+              </p>
+              <div className="flex justify-end items-center text-xl gap-4">
+                <div className="group relative flex items-center">
+                  <button
+                    onClick={() => handleDeleteTask(task.id)}
+                    className="text-red-500 hover:text-red-400 flex items-center relative overflow-hidden"
+                  >
+                    <RiDeleteBin2Fill />
+                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                      Delete
+                    </span>
+                  </button>
+                </div>
+                {!task.completed && (
+                  <div className="group relative flex items-center">
+                    <button
+                      onClick={() => handleCompleteTask(task.id)}
+                      className="text-green-500 hover:text-green-400 flex items-center relative overflow-hidden"
+                    >
+                      <FaCheckCircle />
+                      <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                        Complete
+                      </span>
+                    </button>
+                  </div>
+                )}
+                <div className="group relative flex items-center">
+                  <button
+                    onClick={() => handleArchiveTask(task.id)}
+                    className="text-pink-500 hover:text-pink-400 flex items-center relative overflow-hidden"
+                  >
+                    <MdOutlineArchive className="scale-110" />
+                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                      Archive
+                    </span>
+                  </button>
+                </div>
+                <div className="group relative flex items-center">
+                  <button
+                    onClick={() => navigate(`/edit-task/${task.id}`)}
+                    className="text-yellow-400 hover:text-yellow-300 flex items-center relative overflow-hidden"
+                  >
+                    <FaEdit />
+                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                      Edit
+                    </span>
+                  </button>
+                </div>
+                <div className="group relative flex items-center">
+                  <button
+                    onClick={() => openShareModal(task)}
+                    className="text-blue-400 hover:text-blue-300 flex items-center relative overflow-hidden"
+                  >
+                    <FaShareAlt />
+                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                      Share
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-white text-center col-span-full">
+            No tasks found.
+          </p>
+        )}
       </div>
+
+      {/* Modals */}
+      {showShareModal && taskToShare && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-neutral-800 px-6 pb-6 pt-2 rounded-lg shadow-lg text-center text-white relative">
+            <button
+              onClick={closeShareModal}
+              className="absolute top-2 right-2 text-red-500 text-2xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl mb-4">Share Task</h2>
+            <p className="text-lg mb-4">{taskToShare.title}</p>
+            <p>{taskToShare.description}</p>
+            <button
+              onClick={closeShareModal}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white mt-4"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {showModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-neutral-800 px-6 pb-6 pt-2 rounded-lg shadow-lg text-center text-white relative">
+            <button
+              onClick={closeTaskModal}
+              className="absolute top-2 left-2 text-red-500 text-2xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl mb-4">{selectedTask.title}</h2>
+            <p className="text-neutral-200 mb-4">{selectedTask.description}</p>
+            <button
+              onClick={closeTaskModal}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md text-white mt-4"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
