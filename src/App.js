@@ -3,7 +3,6 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
 } from 'react-router-dom'
 import NewTaskPage from './pages/NewTaskPage'
 import LoginPage from './pages/LoginPage'
@@ -15,6 +14,8 @@ import Footer from './components/Footer'
 import EditTaskPage from './pages/EditTaskPage'
 import ArchivedTasksPage from './pages/ArchivedTasksPage'
 import ProfilePage from './pages/ProfilePage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+
 const App = () => {
   return (
     <Router>
@@ -22,7 +23,7 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
-
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Protected Routes */}
         <Route
           path="/tasks"
