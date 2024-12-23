@@ -12,23 +12,22 @@ const NewTaskPage = () => {
   const [description, setDescription] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [reminderChecked, setReminderChecked] = useState(false)
+  const [reminderDate, setReminderDate] = useState('')
+  const [reminderEmail, setReminderEmail] = useState('')
   const navigate = useNavigate()
   const { user, logout } = useAuth()
 
   const handleCreateTask = async (e) => {
     e.preventDefault()
 
-    // Clear any existing errors
     setError('')
-
     if (!user) {
-      console.error('Error: User not authenticated.')
       setError('You must be logged in to create a task.')
       return
     }
 
     if (!title.trim() || !description.trim()) {
-      console.error('Error: Title or description is empty.')
       setError('Both title and description are required.')
       return
     }
@@ -38,23 +37,28 @@ const NewTaskPage = () => {
       title: title.trim(),
       description: description.trim(),
       createdAt: new Date(),
-      archived: false, // Ensure this field is set to false by default
+      archived: false,
+      reminder: reminderChecked
+        ? { date: reminderDate, email: reminderEmail }
+        : null, // Add reminder if checked
     }
-
-    console.log('Attempting to create task:', taskData)
 
     setLoading(true)
     try {
       await addDoc(collection(db, 'tasks'), taskData)
-      console.log('Task successfully created.')
       navigate('/tasks')
     } catch (err) {
-      console.error('Error creating task:', err.message, err)
-      setError(
-        `Failed to create task. Error: ${err.message}. Check Firestore rules and console logs.`
-      )
+      setError(`Failed to create task. Error: ${err.message}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleReminderChange = () => {
+    setReminderChecked(!reminderChecked)
+    if (!reminderChecked) {
+      setReminderDate('')
+      setReminderEmail('')
     }
   }
 
@@ -126,6 +130,45 @@ const NewTaskPage = () => {
               required
             ></textarea>
           </div>
+          <div className="mb-4 flex items-center gap-2">
+            <div
+              onClick={handleReminderChange}
+              className={`w-[22px] h-[22px] rounded-full cursor-pointer border-2 transition-all duration-300
+                ${reminderChecked ? 'bg-green-500' : 'bg-green-100'} 
+                ${reminderChecked ? 'border-green-800' : 'border-neutral-700'}`}
+            >
+              {reminderChecked && (
+                <div className="w-full h-full bg-green-500 rounded-full" />
+              )}
+            </div>
+            <label className="text-gray-300">Set a reminder</label>
+          </div>
+
+          {reminderChecked && (
+            <div className="mb-4">
+              <label className="text-gray-300 mb-2">
+                Reminder Date and Time
+              </label>
+              <input
+                type="datetime-local"
+                value={reminderDate}
+                onChange={(e) => setReminderDate(e.target.value)}
+                className="w-full mb-1 text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+                required
+              />
+              <label className="text-gray-300 mb-2 mt-2">
+                Email for Reminder
+              </label>
+              <input
+                type="email"
+                value={reminderEmail}
+                onChange={(e) => setReminderEmail(e.target.value)}
+                className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+                required
+              />
+            </div>
+          )}
+
           <button
             type="submit"
             className="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
@@ -135,7 +178,6 @@ const NewTaskPage = () => {
           </button>
         </form>
       </div>
-
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
