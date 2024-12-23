@@ -35,8 +35,8 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="max-w-md w-full bg-gray-800 text-gray-100 rounded-lg shadow-md p-8">
+    <div className="flex items-center justify-center min-h-screen bg-neutral-900">
+      <div className="max-w-md w-full bg-neutral-800 text-neutral-100 rounded-lg shadow-md p-8">
         <h2 className="text-3xl text-center mb-4 text-green-500">
           Reset Password
         </h2>
@@ -56,7 +56,7 @@ const ResetPasswordPage = () => {
             <div className="mb-4">
               <label
                 htmlFor="password"
-                className="block mb-2 text-sm font-medium text-gray-300"
+                className="block mb-2 text-sm font-medium text-neutral-300"
               >
                 New Password
               </label>
@@ -65,7 +65,7 @@ const ResetPasswordPage = () => {
                 id="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 rounded-lg bg-neutral-700 text-neutral-100 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
