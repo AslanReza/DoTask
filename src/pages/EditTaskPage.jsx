@@ -6,8 +6,12 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore'
 const EditTaskPage = () => {
   const { taskId } = useParams()
   const navigate = useNavigate()
-
-  const [task, setTask] = useState({ title: '', description: '' })
+  const [task, setTask] = useState({
+    title: '',
+    description: '',
+    category: '',
+    priority: 'Optional',
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -39,8 +43,8 @@ const EditTaskPage = () => {
     setLoading(true)
     try {
       const taskRef = doc(db, 'tasks', taskId)
-      await updateDoc(taskRef, { ...task, edited: true }) // Mark the task as edited
-      navigate('/tasks') // Redirect back to tasks page
+      await updateDoc(taskRef, { ...task, edited: true })
+      navigate('/tasks')
     } catch (err) {
       setError('Failed to update task')
     } finally {
@@ -89,6 +93,43 @@ const EditTaskPage = () => {
               value={task.description}
               onChange={handleInputChange}
               rows="5"
+              className="w-full px-4 py-2 bg-neutral-700 text-white rounded-md outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="priority"
+              className="block text-neutral-400 mb-2 text-lg"
+            >
+              Priority
+            </label>
+            <select
+              id="priority"
+              name="priority"
+              value={task.priority}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 bg-neutral-700 text-white rounded-md outline-none focus:ring-2 focus:ring-green-500"
+              required
+            >
+              <option value="Critical">Critical</option>
+              <option value="Important">Important</option>
+              <option value="Optional">Optional</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="category"
+              className="block text-neutral-400 mb-2 text-lg"
+            >
+              Category
+            </label>
+            <input
+              type="text"
+              id="category"
+              name="category"
+              value={task.category}
+              onChange={handleInputChange}
               className="w-full px-4 py-2 bg-neutral-700 text-white rounded-md outline-none focus:ring-2 focus:ring-green-500"
               required
             />

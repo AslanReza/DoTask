@@ -16,3 +16,14 @@ body {
 h1 {
   font-family: 'Rubik 80s Fade', system-ui;
 }
+@keyframes fallDown {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.animate-fall-down {
+  animation: fallDown 0.3s ease-in-out forwards;
+}

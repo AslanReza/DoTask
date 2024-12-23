@@ -10,6 +10,8 @@ import { FaTasks } from 'react-icons/fa'
 const NewTaskPage = () => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [priority, setPriority] = useState('Optional')
+  const [category, setCategory] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [reminderChecked, setReminderChecked] = useState(false)
@@ -36,11 +38,13 @@ const NewTaskPage = () => {
       userId: user.uid,
       title: title.trim(),
       description: description.trim(),
+      priority,
+      category: category || null,
       createdAt: new Date(),
       archived: false,
       reminder: reminderChecked
         ? { date: reminderDate, email: reminderEmail }
-        : null, // Add reminder if checked
+        : null,
     }
 
     setLoading(true)
@@ -129,6 +133,28 @@ const NewTaskPage = () => {
               rows="5"
               required
             ></textarea>
+          </div>
+          <div className="mb-4">
+            <label className="text-gray-300 mb-2">Priority</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+            >
+              <option value="Critical">Critical</option>
+              <option value="Important">Important</option>
+              <option value="Optional">Optional</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="text-gray-300 mb-2">Category</label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Enter category (e.g., Work, Personal)"
+              className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+            />
           </div>
           <div className="mb-4 flex items-center gap-2">
             <div

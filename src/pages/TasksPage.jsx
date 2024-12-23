@@ -5,6 +5,7 @@ import { db } from '../config/firebaseConfig'
 import { SiMattermost } from 'react-icons/si'
 import { BsTelegram } from 'react-icons/bs'
 import { FaGithub } from 'react-icons/fa'
+import { FaWandMagicSparkles } from 'react-icons/fa6'
 import {
   collection,
   query,
@@ -36,6 +37,7 @@ const TasksPage = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [copyMessage, setCopyMessage] = useState('')
+  const [showIcons, setShowIcons] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -61,6 +63,7 @@ const TasksPage = () => {
             snapshot.docs.map((doc) => ({
               id: doc.id,
               edited: doc.data().edited || false,
+              priority: doc.data().priority || 'Optional',
               ...doc.data(),
             }))
           )
@@ -88,6 +91,8 @@ const TasksPage = () => {
           snapshot.docs.map((doc) => ({
             id: doc.id,
             edited: doc.data().edited || false,
+            priority: doc.data().priority || 'Optional',
+            category: doc.data().category || '',
             ...doc.data(),
           }))
         )
@@ -236,15 +241,39 @@ const TasksPage = () => {
             <div
               key={task.id}
               className={`bg-neutral-700 p-4 rounded-lg shadow-md relative ${
-                task.completed ? 'opacity-70 border-[2px] border-green-600' : ''
+                task.completed
+                  ? 'opacity-70 border-[2px] border-green-600'
+                  : 'border-[2px] border-neutral-600'
               }`}
             >
               {task.edited && (
-                <div className="absolute bottom-2 left-2 flex flex-row-reverse items-center text-yellow-500 text-xs p-1 rounded-full">
-                  <BiSolidMessageSquareEdit className="absolute left-[34px] top-[-3px]" />
-                  <span className="text-[10px]">Edited</span>
+                <div className="absolute bottom-2 left-2 flex flex-row-reverse items-start text-yellow-500 text-xs  rounded-full">
+                  <BiSolidMessageSquareEdit className="" />
+                  <span className="text-[8px]">Edited</span>
                 </div>
               )}
+              <div className="flex flex-row justify-end absolute top-[-7px] right-1 gap-1">
+                {/* Category Badge */}
+                {task.category && (
+                  <div className="bg-blue-500 text-white text-[8px] px-1 rounded-lg">
+                    {task.category}
+                  </div>
+                )}
+                {/* Priority Badge */}
+                <div className="pr-2 text-white text-[8px]">
+                  {task.priority === 'Critical' ? (
+                    <span className="bg-red-500 px-1 rounded-lg">Urgent</span>
+                  ) : task.priority === 'Important' ? (
+                    <span className="bg-yellow-500 px-1 rounded-lg">
+                      Important
+                    </span>
+                  ) : (
+                    <span className="bg-green-500 px-1 rounded-lg">
+                      Optional
+                    </span>
+                  )}
+                </div>
+              </div>
               {/* Complete Icon */}
               <div className="absolute top-2 right-2 flex gap-3">
                 {task.completed && (
@@ -256,7 +285,6 @@ const TasksPage = () => {
                   </button>
                 )}
               </div>
-
               <h2
                 onClick={() => openTaskModal(task)}
                 className="font-semibold text-green-500 text-lg mb-2 cursor-pointer"
@@ -266,64 +294,104 @@ const TasksPage = () => {
               <p className="text-gray-300 whitespace-pre-wrap mb-4">
                 {task.description}
               </p>
-              <div className="flex justify-end items-center text-xl gap-4">
-                <div className="group relative flex items-center">
+              <div className=" flex flex-row absolute bottom-2 right-2 justify-end">
+                {/* Tools button */}
+                {!showIcons && (
                   <button
-                    onClick={() => openDeleteModal(task)}
-                    className="text-red-500 hover:text-red-400 flex items-center relative overflow-hidden"
+                    onClick={() => setShowIcons(true)}
+                    className="text-gray-500 hover:text-gray-400 flex items-center justify-end"
                   >
-                    <RiDeleteBin2Fill />
-                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
-                      Delete
-                    </span>
+                    <FaWandMagicSparkles className="text-xl" />
                   </button>
-                </div>
-                {!task.completed && (
-                  <div className="group relative flex items-center">
+                )}
+
+                {/* Icons container with staggered animations */}
+                {showIcons && (
+                  <div className="flex flex-row gap-2 items-center justify-end">
+                    {/* Task Action Icons */}
+                    <div className="flex flex-row items-center justify-end gap-2">
+                      <div
+                        className="group relative flex items-center animate-fall-down"
+                        style={{ animationDelay: '0.1s' }}
+                      >
+                        <button
+                          onClick={() => openDeleteModal(task)}
+                          className="text-red-500 hover:text-red-400 flex items-center relative overflow-hidden"
+                        >
+                          <RiDeleteBin2Fill />
+                          <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                            Delete
+                          </span>
+                        </button>
+                      </div>
+                      {!task.completed && (
+                        <div
+                          className="group relative flex items-center animate-fall-down"
+                          style={{ animationDelay: '0.2s' }}
+                        >
+                          <button
+                            onClick={() => handleCompleteTask(task.id)}
+                            className="text-green-500 hover:text-green-400 flex items-center relative overflow-hidden"
+                          >
+                            <FaCheckCircle />
+                            <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                              Complete
+                            </span>
+                          </button>
+                        </div>
+                      )}
+                      <div
+                        className="group relative flex items-center animate-fall-down"
+                        style={{ animationDelay: '0.3s' }}
+                      >
+                        <button
+                          onClick={() => handleArchiveTask(task.id)}
+                          className="text-pink-500 hover:text-pink-400 flex items-center relative overflow-hidden"
+                        >
+                          <MdOutlineArchive className="scale-110" />
+                          <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                            Archive
+                          </span>
+                        </button>
+                      </div>
+                      <div
+                        className="group relative flex items-center animate-fall-down"
+                        style={{ animationDelay: '0.4s' }}
+                      >
+                        <button
+                          onClick={() => navigate(`/edit-task/${task.id}`)}
+                          className="text-yellow-400 hover:text-yellow-300 flex items-center relative overflow-hidden"
+                        >
+                          <FaEdit />
+                          <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                            Edit
+                          </span>
+                        </button>
+                      </div>
+                      <div
+                        className="group relative flex items-center animate-fall-down"
+                        style={{ animationDelay: '0.5s' }}
+                      >
+                        <button
+                          onClick={() => openShareModal(task)}
+                          className="text-blue-600 hover:text-blue-500 flex items-center relative overflow-hidden"
+                        >
+                          <FaShareAlt />
+                          <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
+                            Share
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                    {/* Close button */}
                     <button
-                      onClick={() => handleCompleteTask(task.id)}
-                      className="text-green-500 hover:text-green-400 flex items-center relative overflow-hidden"
+                      onClick={() => setShowIcons(false)}
+                      className="text-gray-500 hover:text-gray-400"
                     >
-                      <FaCheckCircle />
-                      <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
-                        Complete
-                      </span>
+                      <FaWandMagicSparkles className="text-xl" />
                     </button>
                   </div>
                 )}
-                <div className="group relative flex items-center">
-                  <button
-                    onClick={() => handleArchiveTask(task.id)}
-                    className="text-pink-500 hover:text-pink-400 flex items-center relative overflow-hidden"
-                  >
-                    <MdOutlineArchive className="scale-110" />
-                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
-                      Archive
-                    </span>
-                  </button>
-                </div>
-                <div className="group relative flex items-center">
-                  <button
-                    onClick={() => navigate(`/edit-task/${task.id}`)}
-                    className="text-yellow-400 hover:text-yellow-300 flex items-center relative overflow-hidden"
-                  >
-                    <FaEdit />
-                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
-                      Edit
-                    </span>
-                  </button>
-                </div>
-                <div className="group relative flex items-center">
-                  <button
-                    onClick={() => openShareModal(task)}
-                    className="text-blue-400 hover:text-blue-300 flex items-center relative overflow-hidden"
-                  >
-                    <FaShareAlt />
-                    <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
-                      Share
-                    </span>
-                  </button>
-                </div>
               </div>
             </div>
           ))
