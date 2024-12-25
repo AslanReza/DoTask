@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { IoMdLogOut } from 'react-icons/io'
 import { FaTasks } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
-import { GiNinjaHead } from 'react-icons/gi'
 import { db } from '../config/firebaseConfig'
+import { IoIosCreate } from 'react-icons/io'
+import { RiArchiveDrawerFill } from 'react-icons/ri'
+import { SiTicktick } from 'react-icons/si'
+import { BsHourglassSplit } from 'react-icons/bs'
 
-// Import Firebase services
 import {
   doc,
   getDoc,
@@ -16,7 +18,7 @@ import {
   getDocs,
 } from 'firebase/firestore'
 
-const ProfilePage = () => {
+const DashboardPage = () => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [userInfo, setUserInfo] = useState(null)
@@ -30,14 +32,41 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (user) {
-      // Fetch user data
       fetchUserInfo(user.uid)
-      // Fetch task data
       fetchTaskStats(user.uid)
-      // Fetch recent activity
       fetchUserActivity(user.uid)
     }
   }, [user])
+
+  const fetchTaskStats = async (userId) => {
+    try {
+      const tasksRef = collection(db, 'tasks')
+
+      const tasksQuery = query(tasksRef, where('userId', '==', userId))
+      const taskSnapshot = await getDocs(tasksQuery)
+
+      let created = 0,
+        archived = 0,
+        completed = 0,
+        pending = 0
+
+      taskSnapshot.forEach((doc) => {
+        const taskData = doc.data()
+        created++
+        if (taskData.status === 'archived') {
+          archived++
+        } else if (taskData.status === 'completed') {
+          completed++
+        } else {
+          pending++
+        }
+      })
+
+      setTaskStats({ created, archived, completed, pending })
+    } catch (error) {
+      console.error('Error fetching task stats:', error)
+    }
+  }
 
   const fetchUserInfo = async (userId) => {
     try {
@@ -48,35 +77,6 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error fetching user info:', error)
-    }
-  }
-
-  const fetchTaskStats = async (userId) => {
-    try {
-      const tasksRef = collection(db, 'tasks')
-      const tasksQuery = query(tasksRef, where('userId', '==', userId))
-      const taskSnapshot = await getDocs(tasksQuery)
-
-      let created = 0
-      let archived = 0
-      let completed = 0
-      let pending = 0
-
-      taskSnapshot.forEach((doc) => {
-        const taskData = doc.data()
-        created++ // Counting each task
-        if (taskData.status === 'archived') {
-          archived++ // Archived tasks
-        } else if (taskData.status === 'completed') {
-          completed++ // Completed tasks
-        } else {
-          pending++ // Pending tasks (not archived or completed)
-        }
-      })
-
-      setTaskStats({ created, archived, completed, pending })
-    } catch (error) {
-      console.error('Error fetching task stats:', error)
     }
   }
 
@@ -124,15 +124,12 @@ const ProfilePage = () => {
       </nav>
 
       {/* Main content */}
-      <div className="mt-[40px] z-0 w-full justify-center items-center flex h-[94vh]">
+      <div className="mt-[40px] z-0 mb-1 w-full justify-center items-center flex h-[94vh]">
         <div className="bg-neutral-800 w-full sm:w-[80%] md:w-[50%] h-auto rounded-lg p-4">
           {/* Profile Header */}
           <div className="text-center mb-6 text-2xl">
-            <h1>Profile</h1>
+            <h1>Dashboard</h1>
           </div>
-
-          {/* Profile Picture and Username */}
-
           {/* User Info */}
           <div className="flex flex-col items-start gap-2 mb-4">
             <div className="flex justify-between w-full">
@@ -143,18 +140,12 @@ const ProfilePage = () => {
               <p className="font-semibold">Firebase ID:</p>
               <p>{user?.uid || 'Not Available'}</p>
             </div>
-            <div className="flex justify-between w-full">
-              <p className="font-semibold">Joined:</p>
-              <p>{userInfo?.createdAt || 'N/A'}</p>
-            </div>
           </div>
-
           {/* Divider */}
           <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
-
+          <h1 className="text-xl text-center mb-2">Task Overview</h1>
           {/* Task Overview Section */}
           <div className="flex flex-col mb-4">
-            <h2 className="text-lg font-semibold">Task Overview</h2>
             <div className="flex flex-col sm:flex-row text-green-500 justify-between gap-4 mt-2">
               <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
                 <p className="font-semibold">Created</p>
@@ -174,23 +165,64 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
-
+          <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
           {/* Task Details Section */}
-          <div className="flex items-start flex-col justify-start mb-4">
-            <p className="text-sm">
-              You have created <strong>{taskStats.created}</strong> tasks.
-            </p>
-            <p className="text-sm">
-              You have archived <strong>{taskStats.archived}</strong> tasks.
-            </p>
-            <p className="text-sm">
-              You have completed <strong>{taskStats.completed}</strong> tasks.
-            </p>
-            <p className="text-sm">
-              You have <strong>{taskStats.pending}</strong> pending tasks.
-            </p>
-          </div>
+          <h1 className="text-xl text-neutral-100 text-center mb-0">
+            Your Task Stats
+          </h1>
+          <div className="flex items-stretch flex-col  justify-start my-4 p-4 bg-gradient-to-tr from-neutral-950 to-neutral-700 rounded-lg shadow-xl">
+            <div className="flex flex-col">
+              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-blue-700 p-2 rounded-lg transition duration-300 ease-in-out">
+                <span className="text-3xl text-blue-400">
+                  <IoIosCreate />
+                </span>
+                <p className="text-lg">
+                  You have created{' '}
+                  <strong className="text-3xl font-bold text-blue-400">
+                    {taskStats.created}
+                  </strong>{' '}
+                  tasks.
+                </p>
+              </div>
 
+              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-pink-700 p-2 rounded-lg transition duration-300 ease-in-out">
+                <span className="text-3xl  text-pink-400">
+                  <RiArchiveDrawerFill />
+                </span>
+                <p className="text-lg">
+                  You have archived{' '}
+                  <strong className="text-3xl font-bold text-pink-400">
+                    {taskStats.archived}
+                  </strong>{' '}
+                  tasks.
+                </p>
+              </div>
+              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-green-700 p-2 rounded-lg transition duration-300 ease-in-out">
+                <span className="text-3xl text-green-400">
+                  <SiTicktick />
+                </span>
+                <p className="text-lg">
+                  You have completed{' '}
+                  <strong className="text-3xl font-bold text-green-400">
+                    {taskStats.completed}
+                  </strong>{' '}
+                  tasks.
+                </p>
+              </div>
+              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-yellow-700 p-2 rounded-lg transition duration-300 ease-in-out">
+                <span className="text-3xl text-orange-400">
+                  <BsHourglassSplit />
+                </span>
+                <p className="text-lg">
+                  You have{' '}
+                  <strong className="text-3xl font-bold text-orange-400">
+                    {taskStats.pending}
+                  </strong>{' '}
+                  pending tasks.
+                </p>
+              </div>
+            </div>
+          </div>
           {/* Divider */}
           <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
         </div>
@@ -199,4 +231,4 @@ const ProfilePage = () => {
   )
 }
 
-export default ProfilePage
+export default DashboardPage
