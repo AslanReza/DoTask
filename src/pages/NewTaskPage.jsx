@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext'
 import { db } from '../config/firebaseConfig'
 import { collection, addDoc } from 'firebase/firestore'
 import { useNavigate } from 'react-router-dom'
-import { FaCircleQuestion } from 'react-icons/fa6'
 import { IoMdLogOut } from 'react-icons/io'
 import { FaTasks } from 'react-icons/fa'
 
@@ -19,6 +18,7 @@ const NewTaskPage = () => {
   const [reminderEmail, setReminderEmail] = useState('')
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const [creator, setCreator] = useState('')
 
   const handleCreateTask = async (e) => {
     e.preventDefault()
@@ -40,6 +40,7 @@ const NewTaskPage = () => {
       description: description.trim(),
       priority,
       category: category || null,
+      creator: creator.trim() || '',
       createdAt: new Date(),
       archived: false,
       reminder: reminderChecked
@@ -86,13 +87,6 @@ const NewTaskPage = () => {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate('/faqs')}
-            className="bg-blue-800 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
-          >
-            <span className="text-xs group-hover:inline-block hidden">FAQ</span>
-            <FaCircleQuestion />
-          </button>
-          <button
             onClick={logout}
             className="bg-red-500 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
           >
@@ -103,10 +97,10 @@ const NewTaskPage = () => {
           </button>
         </div>
       </nav>
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center m-4 items-center h-auto">
         <form
           onSubmit={handleCreateTask}
-          className="bg-neutral-800 p-8 shadow-lg rounded-lg w-full max-w-md"
+          className="bg-neutral-800 p-8 m-10 shadow-lg rounded-lg w-full max-w-md"
         >
           <h1 className="text-2xl mb-4 text-center text-green-500">New Task</h1>
           {error && <p className="text-red-500 mb-4">{error}</p>}
@@ -141,10 +135,20 @@ const NewTaskPage = () => {
               onChange={(e) => setPriority(e.target.value)}
               className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
             >
-              <option value="Critical">Critical</option>
+              <option value="Urgent">Urgent</option>
               <option value="Important">Important</option>
               <option value="Optional">Optional</option>
             </select>
+          </div>
+          <div className="mb-4">
+            <label className="text-gray-300 mb-2">Author</label>
+            <input
+              type="text"
+              value={creator}
+              onChange={(e) => setCreator(e.target.value)}
+              placeholder="Mention creator's name if Needed"
+              className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+            />
           </div>
           <div className="mb-4">
             <label className="text-gray-300 mb-2">Category</label>
