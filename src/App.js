@@ -1,9 +1,5 @@
 import React from 'react'
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-} from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import NewTaskPage from './pages/NewTaskPage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
@@ -41,9 +37,30 @@ const App = () => {
             </PrivateRoute>
           }
         />
-        <Route path="/edit-task/:taskId" element={<EditTaskPage />} />
-        <Route path="/archived-tasks" element={<ArchivedTasksPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route
+          path="/edit-task/:taskId"
+          element={
+            <PrivateRoute>
+              <EditTaskPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/archived-tasks"
+          element={
+            <PrivateRoute>
+              <ArchivedTasksPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          }
+        />
       </Routes>
       <Footer />
     </Router>
