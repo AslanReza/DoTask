@@ -4,19 +4,22 @@ import { IoMdLogOut } from 'react-icons/io'
 import { FaTasks } from 'react-icons/fa'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../config/firebaseConfig'
-import { IoIosCreate } from 'react-icons/io'
-import { RiArchiveDrawerFill } from 'react-icons/ri'
-import { SiTicktick } from 'react-icons/si'
-import { BsHourglassSplit } from 'react-icons/bs'
-
 import {
-  doc,
-  getDoc,
   collection,
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
 } from 'firebase/firestore'
+import { IoIosCreate } from 'react-icons/io'
+import { RiArchiveDrawerFill } from 'react-icons/ri'
+import { SiTicktick } from 'react-icons/si'
+import { BsHourglassSplit } from 'react-icons/bs'
+import { Doughnut } from 'react-chartjs-2'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+
+ChartJS.register(ArcElement, Tooltip, Legend)
 
 const DashboardPage = () => {
   const navigate = useNavigate()
@@ -93,10 +96,62 @@ const DashboardPage = () => {
     }
   }
 
+  const chartData = {
+    labels: ['Created', 'Pending', 'Completed', 'Archived'],
+    datasets: [
+      {
+        data: [
+          taskStats.created,
+          taskStats.pending,
+          taskStats.completed,
+          taskStats.archived,
+        ],
+        backgroundColor: ['#60A5FA', '#FB923C', '#4ADE80', '#F472B6'],
+        hoverBackgroundColor: ['#347acf', '#d27426', '#239a4e', '#b33274'],
+        borderWidth: 2,
+        borderColor: '#000',
+      },
+    ],
+  }
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          font: {
+            size: 10,
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+      },
+      datalabels: {
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: '#fff',
+        align: 'start', 
+        anchor: 'end', 
+        offset: 10, 
+        color: '#fff', 
+        font: {
+          weight: 'bold',
+          size: 14,
+        },
+      },
+    },
+    cutout: '55%',
+  }
+
   return (
     <div className="bg-neutral-900 text-neutral-200">
       {/* Navigation */}
-      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
+      <nav className="flex w-full z-40 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl rubik-80s-fade-regular">
             <span className="text-sm text-green-500">On</span>Task
@@ -124,8 +179,8 @@ const DashboardPage = () => {
       </nav>
 
       {/* Main content */}
-      <div className="mt-[40px] z-0 mb-1 w-full justify-center items-center flex h-[94vh]">
-        <div className="bg-neutral-800 w-full sm:w-[80%] md:w-[50%] h-auto rounded-lg p-4">
+      <div className="z-[-10] w-full justify-center items-center flex h-auto">
+        <div className="bg-neutral-800 w-full sm:w-[80%] md:w-[50%] mt-6 mb-12 rounded-lg p-4">
           {/* Profile Header */}
           <div className="text-center mb-6 text-2xl">
             <h1>Dashboard</h1>
@@ -143,34 +198,44 @@ const DashboardPage = () => {
           </div>
           {/* Divider */}
           <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
-          <h1 className="text-xl text-center mb-2">Task Overview</h1>
+
           {/* Task Overview Section */}
-          <div className="flex flex-col mb-4">
-            <div className="flex flex-col sm:flex-row text-green-500 justify-between gap-4 mt-2">
-              <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
-                <p className="font-semibold">Created</p>
-                <p>{taskStats.created}</p>
-              </div>
-              <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
-                <p className="font-semibold">Completed</p>
-                <p>{taskStats.completed}</p>
-              </div>
-              <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
-                <p className="font-semibold">Pending</p>
-                <p>{taskStats.pending}</p>
-              </div>
-              <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
-                <p className="font-semibold">Archived</p>
-                <p>{taskStats.archived}</p>
-              </div>
+          <h1 className="text-xl text-center mb-2">Task Overview</h1>
+          <div className="flex flex-col sm:flex-row text-green-500 justify-between gap-4 mt-2">
+            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+              <p className="font-semibold">Created</p>
+              <p>{taskStats.created}</p>
+            </div>
+            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+              <p className="font-semibold">Completed</p>
+              <p>{taskStats.completed}</p>
+            </div>
+            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+              <p className="font-semibold">Pending</p>
+              <p>{taskStats.pending}</p>
+            </div>
+            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+              <p className="font-semibold">Archived</p>
+              <p>{taskStats.archived}</p>
             </div>
           </div>
+          {/* Divider */}
           <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
-          {/* Task Details Section */}
+
+          {/* Task Stats Chart (Doughnut) */}
+          <h1 className="text-xl text-center">Task Breakdown</h1>
+          <div className="my-2 w-full flex  items-center flex-col justify-center h-64 ">
+            <Doughnut options={chartOptions} data={chartData} />
+          </div>
+
+          {/* Divider */}
+          <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
+
+          {/* Task Stats */}
           <h1 className="text-xl text-neutral-100 text-center mb-0">
             Your Task Stats
           </h1>
-          <div className="flex items-stretch flex-col  justify-start my-4 p-4 bg-gradient-to-tr from-neutral-950 to-neutral-700 rounded-lg shadow-xl">
+          <div className="flex items-stretch flex-col justify-start my-4 p-4 bg-gradient-to-tr from-neutral-950 to-neutral-700 rounded-lg shadow-xl">
             <div className="flex flex-col">
               <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-blue-700 p-2 rounded-lg transition duration-300 ease-in-out">
                 <span className="text-3xl text-blue-400">
@@ -223,6 +288,7 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
+
           {/* Divider */}
           <div className="bg-neutral-700 p-[0.5px] my-3 rounded-full"></div>
         </div>
