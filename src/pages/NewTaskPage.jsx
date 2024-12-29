@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { db } from '../config/firebaseConfig'
 import { collection, addDoc } from 'firebase/firestore'
@@ -15,10 +15,18 @@ const NewTaskPage = () => {
   const [loading, setLoading] = useState(false)
   const [reminderChecked, setReminderChecked] = useState(false)
   const [reminderDate, setReminderDate] = useState('')
-  const [reminderEmail, setReminderEmail] = useState('')
+  const [reminderEmail, setReminderEmail] = useState('') // Email state
+  const [reminderFrequency, setReminderFrequency] = useState('once')
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth() // Access logged in user from context
   const [creator, setCreator] = useState('')
+
+  // Set default email when the user is logged in
+  useEffect(() => {
+    if (user) {
+      setReminderEmail(user.email) // Set email as default reminder value
+    }
+  }, [user])
 
   const handleCreateTask = async (e) => {
     e.preventDefault()
@@ -44,8 +52,13 @@ const NewTaskPage = () => {
       createdAt: new Date(),
       archived: false,
       reminder: reminderChecked
-        ? { date: reminderDate, email: reminderEmail }
+        ? {
+            date: reminderDate,
+            email: reminderEmail, // Store the email as part of reminder
+            frequency: reminderFrequency,
+          }
         : null,
+      completed: false, // Ensure completed is false when creating the task
     }
 
     setLoading(true)
@@ -63,7 +76,7 @@ const NewTaskPage = () => {
     setReminderChecked(!reminderChecked)
     if (!reminderChecked) {
       setReminderDate('')
-      setReminderEmail('')
+      setReminderFrequency('once') // Reset frequency when reminder is disabled
     }
   }
 
@@ -191,11 +204,23 @@ const NewTaskPage = () => {
               </label>
               <input
                 type="email"
-                value={reminderEmail}
-                onChange={(e) => setReminderEmail(e.target.value)}
+                value={reminderEmail} // This will be default to logged user's email
+                disabled // Make the input field read-only
                 className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
                 required
               />
+              <div className="mt-4">
+                <label className="text-gray-300 mb-2">Reminder Frequency</label>
+                <select
+                  value={reminderFrequency}
+                  onChange={(e) => setReminderFrequency(e.target.value)}
+                  className="w-full text-neutral-100 px-4 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
+                >
+                  <option value="once">Once</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
             </div>
           )}
 
@@ -208,21 +233,6 @@ const NewTaskPage = () => {
           </button>
         </form>
       </div>
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #202020;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #2f855a;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #38a169;
-        }
-      `}</style>
     </div>
   )
 }

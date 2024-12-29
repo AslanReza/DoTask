@@ -27,3 +27,32 @@ h1 {
 .animate-fall-down {
   animation: fallDown 0.3s ease-in-out forwards;
 }
+/* Customizing scrollbars for Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px; 
+}
+
+::-webkit-scrollbar-track {
+  background: #262626; 
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4CAF50;
+  border-radius: 10px; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+::-webkit-scrollbar-corner {
+  background: #262626; 
+}
+
+/* Custom scrollbar for Firefox */
+html {
+  scrollbar-width: thin; 
+  scrollbar-color: #4CAF50 #262626; 
+}
