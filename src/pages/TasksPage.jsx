@@ -16,15 +16,18 @@ import {
   updateDoc,
 } from 'firebase/firestore'
 import { MdRemoveDone } from 'react-icons/md'
+import { TbFilterSearch } from 'react-icons/tb'
+import { TbFilterX } from 'react-icons/tb'
 import { BiSolidMessageSquareEdit } from 'react-icons/bi'
 import { useAuth } from '../context/AuthContext'
-import { IoSettings } from 'react-icons/io5'
+import { CgProfile } from 'react-icons/cg'
 import { FaClipboardCheck } from 'react-icons/fa6'
 import { MdAddTask } from 'react-icons/md'
 import { IoMdLogOut } from 'react-icons/io'
 import { MdOutlineArchive } from 'react-icons/md'
 import { FaEdit, FaCheckCircle, FaShareAlt } from 'react-icons/fa'
 import { RiDeleteBin2Fill } from 'react-icons/ri'
+import { Timestamp } from 'firebase/firestore'
 
 const TasksPage = () => {
   const [tasks, setTasks] = useState([])
@@ -37,6 +40,7 @@ const TasksPage = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [copyMessage, setCopyMessage] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
 
   useEffect(() => {
@@ -112,6 +116,23 @@ const TasksPage = () => {
     setSelectedTask(null)
   }
 
+  const [filterCriteria, setFilterCriteria] = useState({
+    search: '',
+    creator: '',
+    priority: '',
+    status: '',
+    createdAt: '',
+    edited: false,
+  })
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target
+    setFilterCriteria((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
   const openShareModal = (task) => {
     setTaskToShare(task)
     setShowShareModal(true)
@@ -121,14 +142,19 @@ const TasksPage = () => {
     setShowShareModal(false)
     setTaskToShare(null)
   }
+  const toggleFilters = () => {
+    setShowFilters((prev) => !prev)
+  }
 
   const handleCompleteTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
-      await updateDoc(taskRef, { completed: true })
+      await updateDoc(taskRef, { status: 'completed', completed: true })
       setTasks(
         tasks.map((task) =>
-          task.id === taskId ? { ...task, completed: true } : task
+          task.id === taskId
+            ? { ...task, status: 'completed', completed: true }
+            : task
         )
       )
     } catch (error) {
@@ -139,10 +165,12 @@ const TasksPage = () => {
   const handleUndoCompleteTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
-      await updateDoc(taskRef, { completed: false })
+      await updateDoc(taskRef, { status: 'pending', completed: false })
       setTasks(
         tasks.map((task) =>
-          task.id === taskId ? { ...task, completed: false } : task
+          task.id === taskId
+            ? { ...task, status: 'pending', completed: false }
+            : task
         )
       )
     } catch (error) {
@@ -159,8 +187,15 @@ const TasksPage = () => {
   const handleArchiveTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
-      await updateDoc(taskRef, { archived: true })
-      setTasks(tasks.filter((task) => task.id !== taskId))
+      await updateDoc(taskRef, { status: 'archived', archived: true })
+
+      setTasks(
+        tasks.map((task) =>
+          task.id === taskId
+            ? { ...task, status: 'archived', archived: true }
+            : task
+        )
+      )
     } catch (error) {
       console.error('Error archiving task:', error)
     }
@@ -176,6 +211,10 @@ const TasksPage = () => {
     }
   }
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+  }
+
   const openDeleteModal = (task) => {
     setTaskToDelete(task)
     setShowDeleteModal(true)
@@ -186,10 +225,49 @@ const TasksPage = () => {
     setTaskToDelete(null)
   }
 
+  const filteredTasks = tasks.filter((task) => {
+    if (!task.archived) {
+      const matchesSearch = filterCriteria.search
+        ? task.title
+            ?.toLowerCase()
+            .includes(filterCriteria.search.toLowerCase())
+        : true
+
+      const matchesCreator = filterCriteria.creator
+        ? task.creator
+            ?.toLowerCase()
+            .includes(filterCriteria.creator.toLowerCase())
+        : true
+      const matchesPriority = filterCriteria.priority
+        ? task.priority === filterCriteria.priority
+        : true
+
+      const matchesStatus = filterCriteria.status
+        ? task.status === filterCriteria.status
+        : true
+
+      const matchesCreatedAt = filterCriteria.createdAt
+        ? task.createdAt.toDate() >= new Date(filterCriteria.createdAt)
+        : true
+
+      const matchesEdited = filterCriteria.edited ? task.edited : true
+      return (
+        matchesSearch &&
+        matchesCreator &&
+        matchesPriority &&
+        matchesStatus &&
+        matchesCreatedAt &&
+        matchesEdited
+      )
+    }
+
+    return false
+  })
+
   return (
     <div>
       {/* Navbar */}
-      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
+      <nav className="flex w-full z-10 fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl rubik-80s-fade-regular">
             <span className="text-sm text-green-500">On</span>Task
@@ -206,38 +284,214 @@ const TasksPage = () => {
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/archived-tasks')}
-            className="bg-pink-600 p-1 hidden text-2xl items-center group sm:flex flex-row gap-1 rounded-full"
+            className="bg-pink-600 group p-1 text-2xl  items-center group sm:flex flex-row rounded-full"
           >
-            <span className="text-xs group-hover:inline-block hidden">
+            <span className="hidden sm:block text-xs max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] group-hover:mr-1 duration-300 ease-linear">
               Archived
             </span>
             <MdOutlineArchive />
           </button>
           <button
-            onClick={() => navigate('/profile')}
-            className="bg-neutral-600 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
+            onClick={() => navigate('/dashboard')}
+            className="bg-indigo-600 group p-1 text-2xl items-center sm:flex flex-row rounded-full"
           >
-            <span className="text-xs group-hover:inline-block hidden">
-              Profile
+            <span className="hidden sm:block text-xs max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] group-hover:mr-1 duration-300 ease-linear">
+              Dashboard
             </span>
-            <IoSettings />
+            <CgProfile />
           </button>
           <button
             onClick={logout}
-            className="bg-red-500 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
+            className="bg-red-500 group p-1 text-2xl items-center group sm:flex flex-row rounded-full"
           >
-            <span className="text-xs group-hover:inline-block hidden">
-              Log Out
+            <span className="hidden sm:block text-xs max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] group-hover:mr-1 duration-300 ease-linear">
+              Exit
             </span>
             <IoMdLogOut />
           </button>
         </div>
       </nav>
+      <div className="filter-toggle mt-12 text-center flex justify-center mb-2">
+        <button
+          onClick={toggleFilters}
+          className="flex items-center px-8 py-1 bg-neutral-600 text-gray-300 rounded-md hover:bg-neutral-500 transition duration-300"
+        >
+          {showFilters ? (
+            <TbFilterX className="text-xl text-red-500" />
+          ) : (
+            <TbFilterSearch className="text-xl text-green-500" />
+          )}
+          <span className="font-semibold">{showFilters ? '' : ''}</span>
+        </button>
+      </div>
+      {showFilters && (
+        <div className="filter-section bg-neutral-700 p-4 mx-6 rounded-lg shadow-md mb-0">
+          <h3 className="text-green-500 font-semibold text-xl text-center mb-2">
+            Filters
+          </h3>
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+          >
+            {/* Search Input */}
+            <div className="flex-grow">
+              <input
+                type="text"
+                name="search"
+                value={filterCriteria.search}
+                onChange={handleFilterChange}
+                placeholder="Task's Title..."
+                className="w-full p-2 bg-neutral-600 text-gray-300 rounded-md focus:outline-none focus:ring focus:ring-green-500"
+              />
+            </div>
+
+            {/* Creator Filter */}
+            <div className="flex-grow">
+              <input
+                type="text"
+                name="creator"
+                value={filterCriteria.creator}
+                onChange={handleFilterChange}
+                placeholder="Creator's Name..."
+                className="w-full p-2 bg-neutral-600 text-gray-300 rounded-md focus:outline-none focus:ring focus:ring-green-500"
+              />
+            </div>
+            <div className="flex-grow">
+              <select
+                name="priority"
+                value={filterCriteria.priority}
+                onChange={handleFilterChange}
+                className="w-full p-2 bg-neutral-600 text-gray-300 rounded-md focus:outline-none focus:ring focus:ring-green-500"
+              >
+                <option value="">All Priorities</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Important">Important</option>
+                <option value="Optional">Optional</option>
+              </select>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex-grow">
+              <select
+                name="status"
+                value={filterCriteria.status}
+                onChange={handleFilterChange}
+                className="w-full p-2 bg-neutral-600 text-gray-300 rounded-md focus:outline-none focus:ring focus:ring-green-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="completed">
+                  Completed (
+                  {tasks.filter((task) => task.status === 'completed').length})
+                </option>
+                <option value="pending">
+                  Pending (
+                  {tasks.filter((task) => task.status === 'pending').length})
+                </option>
+              </select>
+            </div>
+
+            {/* Created At Filter */}
+            <div className="flex-grow">
+              <input
+                type="date"
+                name="createdAt"
+                value={filterCriteria.createdAt}
+                onChange={handleFilterChange}
+                className="w-full p-2 bg-neutral-600 text-gray-300 rounded-md focus:outline-none focus:ring focus:ring-green-500"
+              />
+            </div>
+
+            {/* Edited Filter */}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="edited"
+                  checked={filterCriteria.edited}
+                  onChange={() =>
+                    setFilterCriteria((prev) => ({
+                      ...prev,
+                      edited: true,
+                    }))
+                  }
+                  className="hidden"
+                />
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ease-in-out ${
+                    filterCriteria.edited
+                      ? 'border-green-500 bg-green-500'
+                      : 'border-gray-300 bg-gray-300'
+                  }`}
+                >
+                  {filterCriteria.edited && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={4}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-gray-300">Edited</span>
+              </label>
+
+              {/* Not Edited Radio Button */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="edited"
+                  checked={!filterCriteria.edited}
+                  onChange={() =>
+                    setFilterCriteria((prev) => ({
+                      ...prev,
+                      edited: false,
+                    }))
+                  }
+                  className="hidden"
+                />
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors duration-200 ease-in-out ${
+                    !filterCriteria.edited
+                      ? 'border-red-500 bg-red-500'
+                      : 'border-gray-300 bg-gray-300'
+                  }`}
+                >
+                  {!filterCriteria.edited && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={4}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-gray-300">Not Edited</span>
+              </label>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Task List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 mt-16">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 mb-4">
         {tasks.length > 0 ? (
-          tasks.map((task) => (
+          filteredTasks.map((task) => (
             <div
               key={task.id}
               className={`bg-neutral-700 p-4 rounded-lg shadow-md relative ${
@@ -260,8 +514,8 @@ const TasksPage = () => {
                   </div>
                 )}
                 {/* Priority Badge */}
-                <div className="pr-2 text-white text-[8px]">
-                  {task.priority === 'Critical' ? (
+                <div className=" text-white text-[8px]">
+                  {task.priority === 'Urgent' ? (
                     <span className="bg-red-500 px-1 rounded-lg">Urgent</span>
                   ) : task.priority === 'Important' ? (
                     <span className="bg-yellow-500 px-1 rounded-lg">
@@ -273,6 +527,12 @@ const TasksPage = () => {
                     </span>
                   )}
                 </div>
+                {/* Creator Badge */}
+                {task.creator && (
+                  <div className="bg-neutral-500 text-white text-[8px] px-1 rounded-lg">
+                    {task.creator || ''}
+                  </div>
+                )}
               </div>
               {/* Complete Icon */}
               <div className="absolute top-2 right-2 flex gap-3">
@@ -418,7 +678,7 @@ const TasksPage = () => {
             >
               &times;
             </button>
-            <h1 className="text-2xl mb-4">Share Task</h1>
+            <h1 className="text-2xl m-4">Share Task</h1>
             <p className="text-lg mb-4">{taskToShare.title}</p>
             <div className="mb-4">
               <p className="text-gray-400 mb-2">Task Link:</p>
@@ -436,7 +696,7 @@ const TasksPage = () => {
                       `${window.location.origin}/tasks/${taskToShare.id}`
                     )
                   }
-                  className="text-green-500 hover:text-green-400 text-lg p-1 rounded-full bg-neutral-950"
+                  className="text-green-500 hover:text-green-400 text-2xl p-1 rounded-full"
                   title="Copy to clipboard"
                 >
                   <i>
@@ -504,7 +764,7 @@ const TasksPage = () => {
             >
               &times;
             </button>
-            <h2 className="text-2xl m-4 text-red-600">Are you sure?</h2>
+            <h1 className="text-2xl m-4 text-neutral-100">Are you sure?</h1>
             <p className="mb-4">{taskToDelete.title}</p>
             <div className="flex justify-center gap-1">
               <button
