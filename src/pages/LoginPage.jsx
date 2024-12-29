@@ -5,7 +5,7 @@ import {
 } from 'firebase/auth'
 import { auth } from '../config/firebaseConfig'
 import { useNavigate } from 'react-router-dom'
-import { RiLockPasswordFill } from 'react-icons/ri'
+import { RiLockPasswordFill, RiEyeCloseFill, RiEyeFill } from 'react-icons/ri'
 import { MdEmail } from 'react-icons/md'
 import { Link } from 'react-router-dom'
 
@@ -17,6 +17,7 @@ const LoginPage = () => {
   const [resetEmailSent, setResetEmailSent] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
   const [resetEmail, setResetEmail] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState(false) // State for password visibility
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
@@ -53,7 +54,7 @@ const LoginPage = () => {
 
   return (
     <div className="bg-neutral-900">
-      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100  justify-center items-center">
+      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-center items-center">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
             <Link to={'/'} className="text-2xl rubik-80s-fade-regular">
@@ -100,14 +101,26 @@ const LoginPage = () => {
                 Password
                 <RiLockPasswordFill />
               </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 text-neutral-100 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={passwordVisible ? 'text' : 'password'} // Toggle password visibility
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 text-neutral-100 py-2 border border-neutral-900 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 bg-neutral-700 pr-10" // Added padding for the icon
+                  required
+                />
+                <span
+                  className="absolute top-1/2 right-3 transform -translate-y-1/2 cursor-pointer"
+                  onClick={() => setPasswordVisible(!passwordVisible)} // Toggle the visibility state
+                >
+                  {passwordVisible ? (
+                    <RiEyeFill size={24} color="#fff" />
+                  ) : (
+                    <RiEyeCloseFill size={24} color="#fff" />
+                  )}
+                </span>
+              </div>
             </div>
 
             <button
