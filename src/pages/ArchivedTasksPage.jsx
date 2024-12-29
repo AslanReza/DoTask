@@ -16,8 +16,10 @@ import { FaTasks } from 'react-icons/fa'
 
 const ArchivedTasksPage = () => {
   const [archivedTasks, setArchivedTasks] = useState([])
+  const [tasks, setTasks] = useState([]) // Store active tasks as well
   const navigate = useNavigate()
 
+  // Fetch archived tasks
   useEffect(() => {
     const fetchArchivedTasks = async () => {
       const tasksRef = collection(db, 'tasks')
@@ -30,22 +32,34 @@ const ArchivedTasksPage = () => {
 
     fetchArchivedTasks()
   }, [])
+
+  // Handle deleting a task
   const handleDeleteTask = async (taskId) => {
     try {
       await deleteDoc(doc(db, 'tasks', taskId))
-      setTasks(tasks.filter((task) => task.id !== taskId))
+      setArchivedTasks(archivedTasks.filter((task) => task.id !== taskId))
     } catch (error) {
       console.error('Error deleting task:', error)
     }
   }
-  const [tasks, setTasks] = useState([])
 
+  // Handle unarchiving a task
   const handleUnarchiveTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
-      await updateDoc(taskRef, { archived: false })
-      // Update the task on the tasks page when unarchived
-      setArchivedTasks(archivedTasks.filter((task) => task.id !== taskId))
+      await updateDoc(taskRef, { status: 'pending', archived: false })
+
+      // Remove the task from archivedTasks and add to tasks
+      const updatedArchivedTasks = archivedTasks.filter(
+        (task) => task.id !== taskId
+      )
+      setArchivedTasks(updatedArchivedTasks)
+
+      // Optionally, fetch the active tasks if you want to refresh
+      const tasksRef = collection(db, 'tasks')
+      const q = query(tasksRef, where('archived', '==', false))
+      const querySnapshot = await getDocs(q)
+      setTasks(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
     } catch (error) {
       console.error('Error unarchiving task:', error)
     }
@@ -73,7 +87,7 @@ const ArchivedTasksPage = () => {
         {archivedTasks.map((task) => (
           <div
             key={task.id}
-            className="bg-neutral-700 border-pink-600 border-[2px] p-4 rounded-lg shadow-md"
+            className="bg-neutral-700 relative border-pink-600 border-[2px] p-4 rounded-lg shadow-md"
           >
             <h2 className="font-semibold text-green-500 text-lg mb-2">
               {task.title}
@@ -81,6 +95,30 @@ const ArchivedTasksPage = () => {
             <p className="text-gray-300 whitespace-pre-wrap mb-4">
               {task.description}
             </p>
+            <div className="flex flex-row justify-end absolute top-[-7px] right-1 gap-1">
+              {task.category && (
+                <div className="bg-blue-500 text-white text-[8px] px-1 rounded-lg">
+                  {task.category}
+                </div>
+              )}
+              <div className=" text-white text-[8px]">
+                {task.priority === 'Critical' ? (
+                  <span className="bg-red-500 px-1 rounded-lg">Urgent</span>
+                ) : task.priority === 'Important' ? (
+                  <span className="bg-yellow-500 px-1 rounded-lg">
+                    Important
+                  </span>
+                ) : (
+                  <span className="bg-green-500 px-1 rounded-lg">Optional</span>
+                )}
+              </div>
+              {task.creator && (
+                <div className="bg-neutral-500 text-white text-[8px] px-1 rounded-lg">
+                  {task.creator || ''}
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end items-center text-xl gap-4">
               <div className="group relative flex items-center">
                 <button
@@ -101,7 +139,7 @@ const ArchivedTasksPage = () => {
                   onClick={() => handleDeleteTask(task.id)}
                   className="text-red-500 hover:text-red-400 flex items-center relative overflow-hidden"
                 >
-                  <RiDeleteBin2Fill   className="scale-125"/>
+                  <RiDeleteBin2Fill className="scale-125" />
                   <span className="ml-1 max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] duration-300 ease-in-out text-sm">
                     Delete
                   </span>
