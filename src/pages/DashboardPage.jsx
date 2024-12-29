@@ -18,6 +18,8 @@ import { SiTicktick } from 'react-icons/si'
 import { BsHourglassSplit } from 'react-icons/bs'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import { FaSun } from "react-icons/fa6";
+import { FaMoon } from "react-icons/fa6";
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -33,6 +35,11 @@ const DashboardPage = () => {
   })
   const [activityLog, setActivityLog] = useState([])
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem('theme')
+    return savedMode === 'dark'
+  })
+
   useEffect(() => {
     if (user) {
       fetchUserInfo(user.uid)
@@ -40,6 +47,16 @@ const DashboardPage = () => {
       fetchUserActivity(user.uid)
     }
   }, [user])
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.body.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [isDarkMode])
 
   const fetchTaskStats = async (userId) => {
     try {
@@ -135,10 +152,10 @@ const DashboardPage = () => {
         borderRadius: 10,
         borderWidth: 2,
         borderColor: '#fff',
-        align: 'start', 
-        anchor: 'end', 
-        offset: 10, 
-        color: '#fff', 
+        align: 'start',
+        anchor: 'end',
+        offset: 10,
+        color: '#fff',
         font: {
           weight: 'bold',
           size: 14,
@@ -166,6 +183,12 @@ const DashboardPage = () => {
           </button>
         </div>
         <div className="flex gap-2">
+        <button
+            onClick={() => setIsDarkMode((prevMode) => !prevMode)}
+            className="bg-gray-600 p-2 rounded-full"
+          >
+            {isDarkMode ? <FaSun  className='text-yellow-300' /> : <FaMoon className='text-gray-100'/>}
+          </button>
           <button
             onClick={logout}
             className="bg-red-500 p-1 text-2xl items-center group flex flex-row gap-1 rounded-full"
