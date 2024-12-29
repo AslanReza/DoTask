@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onSnapshot } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
+import { getArchivedTaskCount } from '../utilities/archivedTaskCounter'
+import { incrementArchivedTaskCount } from '../utilities/archivedTaskCounter'
 import { SiMattermost } from 'react-icons/si'
 import { BsTelegram } from 'react-icons/bs'
 import { FaGithub } from 'react-icons/fa'
@@ -42,6 +44,7 @@ const TasksPage = () => {
   const [copyMessage, setCopyMessage] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
+  const [archivedCount, setArchivedCount] = useState(getArchivedTaskCount())
 
   useEffect(() => {
     if (!user) {
@@ -102,7 +105,7 @@ const TasksPage = () => {
         )
       }
     })
-
+    setArchivedCount(getArchivedTaskCount())
     return () => unsubscribe()
   }, [user])
 
@@ -149,11 +152,16 @@ const TasksPage = () => {
   const handleCompleteTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
     try {
-      await updateDoc(taskRef, { status: 'completed', completed: true })
+      await updateDoc(taskRef, {
+        status: 'completed',
+        completed: true,
+        reminder: null,
+      })
+
       setTasks(
         tasks.map((task) =>
           task.id === taskId
-            ? { ...task, status: 'completed', completed: true }
+            ? { ...task, status: 'completed', completed: true, reminder: null }
             : task
         )
       )
@@ -186,6 +194,7 @@ const TasksPage = () => {
 
   const handleArchiveTask = async (taskId) => {
     const taskRef = doc(db, 'tasks', taskId)
+
     try {
       await updateDoc(taskRef, { status: 'archived', archived: true })
 
@@ -196,6 +205,8 @@ const TasksPage = () => {
             : task
         )
       )
+      incrementArchivedTaskCount()
+      setArchivedCount(getArchivedTaskCount())
     } catch (error) {
       console.error('Error archiving task:', error)
     }
@@ -284,11 +295,15 @@ const TasksPage = () => {
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/archived-tasks')}
-            className="bg-pink-600 group p-1 text-2xl  items-center group sm:flex flex-row rounded-full"
+            className="bg-pink-600 group  px-1 text-2xl  items-center group sm:flex flex-row rounded-full"
           >
+            <span className=" text-[12px] group-hover:px-1 hidden group-hover:inline-block">
+              {archivedCount}
+            </span>
             <span className="hidden sm:block text-xs max-w-0 overflow-hidden group-hover:max-w-[70px] transition-[max-width] group-hover:mr-1 duration-300 ease-linear">
               Archived
             </span>
+
             <MdOutlineArchive />
           </button>
           <button

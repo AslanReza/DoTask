@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { db } from '../config/firebaseConfig'
+import { getArchivedTaskCount } from '../utilities/archivedTaskCounter'
+import { decrementArchivedTaskCount } from '../utilities/archivedTaskCounter'
 import {
   collection,
   query,
@@ -16,10 +18,10 @@ import { FaTasks } from 'react-icons/fa'
 
 const ArchivedTasksPage = () => {
   const [archivedTasks, setArchivedTasks] = useState([])
-  const [tasks, setTasks] = useState([]) // Store active tasks as well
+  const [tasks, setTasks] = useState([])
   const navigate = useNavigate()
+  const [archivedCount, setArchivedCount] = useState(getArchivedTaskCount())
 
-  // Fetch archived tasks
   useEffect(() => {
     const fetchArchivedTasks = async () => {
       const tasksRef = collection(db, 'tasks')
@@ -29,7 +31,7 @@ const ArchivedTasksPage = () => {
         querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
       )
     }
-
+    setArchivedCount(getArchivedTaskCount())
     fetchArchivedTasks()
   }, [])
 
@@ -55,11 +57,12 @@ const ArchivedTasksPage = () => {
       )
       setArchivedTasks(updatedArchivedTasks)
 
-      // Optionally, fetch the active tasks if you want to refresh
       const tasksRef = collection(db, 'tasks')
       const q = query(tasksRef, where('archived', '==', false))
       const querySnapshot = await getDocs(q)
       setTasks(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })))
+      decrementArchivedTaskCount()
+      setArchivedCount(getArchivedTaskCount())
     } catch (error) {
       console.error('Error unarchiving task:', error)
     }
@@ -80,6 +83,11 @@ const ArchivedTasksPage = () => {
             <span className="text-xs inline-block">Tasks</span>
             <FaTasks />
           </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="bg-pink-600 py-1 px-3  text-sm  items-center sm:flex flex-row rounded-full">
+          {archivedCount}
+          </span>
         </div>
       </nav>
 
