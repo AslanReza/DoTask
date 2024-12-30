@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { onSnapshot } from 'firebase/firestore'
 import { db } from '../config/firebaseConfig'
-import { getArchivedTaskCount } from '../utilities/archivedTaskCounter'
-import { incrementArchivedTaskCount } from '../utilities/archivedTaskCounter'
 import { SiMattermost } from 'react-icons/si'
 import { BsTelegram } from 'react-icons/bs'
+import { fetchArchivedTaskCount } from '../utilities/taskStats'
 import { FaGithub } from 'react-icons/fa'
 import { FaWandMagicSparkles } from 'react-icons/fa6'
 import {
@@ -44,7 +43,7 @@ const TasksPage = () => {
   const [copyMessage, setCopyMessage] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [showIcons, setShowIcons] = useState(false)
-  const [archivedCount, setArchivedCount] = useState(getArchivedTaskCount())
+  const [archivedCount, setArchivedCount] = useState(0)
 
   useEffect(() => {
     if (!user) {
@@ -105,8 +104,21 @@ const TasksPage = () => {
         )
       }
     })
-    setArchivedCount(getArchivedTaskCount())
+
     return () => unsubscribe()
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      const syncArchivedCount = async () => {
+        const count = await fetchArchivedTaskCount(user.uid)
+        setArchivedCount(count)
+        localStorage.setItem('archivedTaskCount', count)
+      }
+      syncArchivedCount()
+      const intervalId = setInterval(syncArchivedCount, 1000)
+      return () => clearInterval(intervalId)
+    }
   }, [user])
 
   const openTaskModal = (task) => {
@@ -205,8 +217,6 @@ const TasksPage = () => {
             : task
         )
       )
-      incrementArchivedTaskCount()
-      setArchivedCount(getArchivedTaskCount())
     } catch (error) {
       console.error('Error archiving task:', error)
     }
