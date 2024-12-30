@@ -18,8 +18,8 @@ import { SiTicktick } from 'react-icons/si'
 import { BsHourglassSplit } from 'react-icons/bs'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { FaSun } from "react-icons/fa6";
-import { FaMoon } from "react-icons/fa6";
+import { FaSun } from 'react-icons/fa6'
+import { FaMoon } from 'react-icons/fa6'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
@@ -61,7 +61,6 @@ const DashboardPage = () => {
   const fetchTaskStats = async (userId) => {
     try {
       const tasksRef = collection(db, 'tasks')
-
       const tasksQuery = query(tasksRef, where('userId', '==', userId))
       const taskSnapshot = await getDocs(tasksQuery)
 
@@ -148,19 +147,6 @@ const DashboardPage = () => {
         titleColor: '#fff',
         bodyColor: '#fff',
       },
-      datalabels: {
-        borderRadius: 10,
-        borderWidth: 2,
-        borderColor: '#fff',
-        align: 'start',
-        anchor: 'end',
-        offset: 10,
-        color: '#fff',
-        font: {
-          weight: 'bold',
-          size: 14,
-        },
-      },
     },
     cutout: '55%',
   }
@@ -183,11 +169,15 @@ const DashboardPage = () => {
           </button>
         </div>
         <div className="flex gap-2">
-        <button
+          <button
             onClick={() => setIsDarkMode((prevMode) => !prevMode)}
             className="bg-gray-600 p-2 rounded-full"
           >
-            {isDarkMode ? <FaSun  className='text-yellow-300' /> : <FaMoon className='text-gray-100'/>}
+            {isDarkMode ? (
+              <FaSun className="text-yellow-300" />
+            ) : (
+              <FaMoon className="text-gray-100" />
+            )}
           </button>
           <button
             onClick={logout}
@@ -202,8 +192,8 @@ const DashboardPage = () => {
       </nav>
 
       {/* Main content */}
-      <div className="z-[-10] w-full justify-center items-center flex h-auto">
-        <div className="bg-neutral-800 w-full sm:w-[80%] md:w-[50%] mt-6 mb-12 rounded-lg p-4">
+      <div className="z-[-10] w-full justify-center items-center flex h-auto px-4">
+        <div className="bg-neutral-800 w-full sm:w-[80%] md:w-[60%] lg:w-[50%] xl:w-[40%] mt-6 mb-12 rounded-lg p-4">
           {/* Profile Header */}
           <div className="text-center mb-6 text-2xl">
             <h1>Dashboard</h1>
@@ -211,11 +201,11 @@ const DashboardPage = () => {
           {/* User Info */}
           <div className="flex flex-col items-start gap-2 mb-4">
             <div className="flex justify-between w-full">
-              <p className="font-semibold">Email:</p>
+              <p className="font-semibold text-green-600">Email:</p>
               <p>{user?.email || 'Not Provided'}</p>
             </div>
             <div className="flex justify-between w-full">
-              <p className="font-semibold">Firebase ID:</p>
+              <p className="font-semibold text-green-600">Firebase ID:</p>
               <p>{user?.uid || 'Not Available'}</p>
             </div>
           </div>
@@ -224,20 +214,20 @@ const DashboardPage = () => {
 
           {/* Task Overview Section */}
           <h1 className="text-xl text-center mb-2">Task Overview</h1>
-          <div className="flex flex-col sm:flex-row text-green-500 justify-between gap-4 mt-2">
-            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-neutral-700 text-blue-400 p-3 border-[2px] border-solid border-blue-400 rounded-lg text-center">
               <p className="font-semibold">Created</p>
               <p>{taskStats.created}</p>
             </div>
-            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+            <div className="bg-neutral-700 border-[2px] border-solid border-green-400 text-green-400 p-3 rounded-lg text-center">
               <p className="font-semibold">Completed</p>
               <p>{taskStats.completed}</p>
             </div>
-            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+            <div className="bg-neutral-700 text-orange-400 p-3 rounded-lg border-[2px] border-solid border-orange-400 text-center">
               <p className="font-semibold">Pending</p>
               <p>{taskStats.pending}</p>
             </div>
-            <div className="bg-neutral-700 p-3 rounded-lg w-full text-center">
+            <div className="bg-neutral-700 p-3 text-pink-400 rounded-lg text-center border-[2px] border-solid border-pink-400">
               <p className="font-semibold">Archived</p>
               <p>{taskStats.archived}</p>
             </div>
@@ -247,7 +237,7 @@ const DashboardPage = () => {
 
           {/* Task Stats Chart (Doughnut) */}
           <h1 className="text-xl text-center">Task Breakdown</h1>
-          <div className="my-2 w-full flex  items-center flex-col justify-center h-64 ">
+          <div className="my-2 w-full flex items-center justify-center h-64">
             <Doughnut options={chartOptions} data={chartData} />
           </div>
 
@@ -258,57 +248,54 @@ const DashboardPage = () => {
           <h1 className="text-xl text-neutral-100 text-center mb-0">
             Your Task Stats
           </h1>
-          <div className="flex items-stretch flex-col justify-start my-4 p-4 bg-gradient-to-tr from-neutral-950 to-neutral-700 rounded-lg shadow-xl">
-            <div className="flex flex-col">
-              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-blue-700 p-2 rounded-lg transition duration-300 ease-in-out">
-                <span className="text-3xl text-blue-400">
-                  <IoIosCreate />
-                </span>
-                <p className="text-lg">
-                  You have created{' '}
-                  <strong className="text-3xl font-bold text-blue-400">
-                    {taskStats.created}
-                  </strong>{' '}
-                  tasks.
-                </p>
-              </div>
-
-              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-pink-700 p-2 rounded-lg transition duration-300 ease-in-out">
-                <span className="text-3xl  text-pink-400">
-                  <RiArchiveDrawerFill />
-                </span>
-                <p className="text-lg">
-                  You have archived{' '}
-                  <strong className="text-3xl font-bold text-pink-400">
-                    {taskStats.archived}
-                  </strong>{' '}
-                  tasks.
-                </p>
-              </div>
-              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-green-700 p-2 rounded-lg transition duration-300 ease-in-out">
-                <span className="text-3xl text-green-400">
-                  <SiTicktick />
-                </span>
-                <p className="text-lg">
-                  You have completed{' '}
-                  <strong className="text-3xl font-bold text-green-400">
-                    {taskStats.completed}
-                  </strong>{' '}
-                  tasks.
-                </p>
-              </div>
-              <div className="flex items-center cursor-pointer gap-2 text-white hover:bg-yellow-700 p-2 rounded-lg transition duration-300 ease-in-out">
-                <span className="text-3xl text-orange-400">
-                  <BsHourglassSplit />
-                </span>
-                <p className="text-lg">
-                  You have{' '}
-                  <strong className="text-3xl font-bold text-orange-400">
-                    {taskStats.pending}
-                  </strong>{' '}
-                  pending tasks.
-                </p>
-              </div>
+          <div className="flex flex-col items-stretch justify-center gap-2">
+            <div className="flex flex-row items-center cursor-pointer gap-2 text-white hover:bg-blue-700 p-1 rounded-lg transition duration-300 ease-in-out">
+              <span className="text-2xl text-blue-400">
+                <IoIosCreate />
+              </span>
+              <p className="text-sm">
+                You have created{' '}
+                <strong className="text-2xl font-bold text-blue-400">
+                  {taskStats.created}
+                </strong>{' '}
+                tasks.
+              </p>
+            </div>
+            <div className="flex flex-row items-center cursor-pointer gap-2 text-white hover:bg-pink-700 p-1 rounded-lg transition duration-300 ease-in-out">
+              <span className="text-2xl text-pink-400">
+                <RiArchiveDrawerFill />
+              </span>
+              <p className="text-sm">
+                You have archived{' '}
+                <strong className="text-2xl font-bold text-pink-400">
+                  {taskStats.archived}
+                </strong>{' '}
+                tasks.
+              </p>
+            </div>
+            <div className="flex flex-row items-center cursor-pointer gap-2 text-white hover:bg-green-700 p-1 rounded-lg transition duration-300 ease-in-out">
+              <span className="text-2xl text-green-400">
+                <SiTicktick />
+              </span>
+              <p className="text-sm">
+                You have completed{' '}
+                <strong className="text-2xl font-bold text-green-400">
+                  {taskStats.completed}
+                </strong>{' '}
+                tasks.
+              </p>
+            </div>
+            <div className="flex flex-row items-center cursor-pointer gap-2 text-white hover:bg-yellow-700 p-1 rounded-lg transition duration-300 ease-in-out">
+              <span className="text-2xl text-orange-400">
+                <BsHourglassSplit />
+              </span>
+              <p className="text-sm">
+                You have{' '}
+                <strong className="text-2xl font-bold text-orange-400">
+                  {taskStats.pending}
+                </strong>{' '}
+                pending tasks.
+              </p>
             </div>
           </div>
 
