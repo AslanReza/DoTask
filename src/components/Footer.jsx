@@ -1,26 +1,35 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { FaHeart } from 'react-icons/fa'
-import { FaReact } from 'react-icons/fa'
-import { FaGithub } from 'react-icons/fa'
 
 const Footer = () => {
   return (
-    <footer className="bg-neutral-800 fixed bottom-0 w-full text-xs p-1">
-      <div className="flex justify-center px-2 items-center text-neutral-400">
-        <p>© 2024 OnTask</p>
-        <p className="px-4">|</p>
-        <p className="flex items-center gap-1 hover:text-white">
-          Made with <FaHeart color="red" /> and <FaReact color="cyan" />
-        </p>
-        <p className="px-4">|</p>
-        <div className="flex items-center">
+    <footer className="bg-green-700 text-neutral-300 p-0 fixed bottom-0 w-full">
+      <div className="container mx-auto flex justify-center  items-center text-xs">
+        {/* Center Section (Links) */}
+        <div className="flex justify-center gap-4 p-1 sm:mb-0">
           <Link
-            className="text-lg rounded-full"
-            target="_blank"
-            to={'https://github.com/AslanReza?tab=following'}
+            to="/about"
+            className="hover:text-green-950 transition-colors text-sm"
           >
-            <FaGithub />
+            About Us
+          </Link>
+          <Link
+            to="/contact"
+            className="hover:text-green-950 transition-colors text-sm"
+          >
+            Contact
+          </Link>
+          <Link
+            to="/privacy"
+            className="hover:text-green-950 transition-colors text-sm"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            to="/terms"
+            className="hover:text-green-950 transition-colors text-sm"
+          >
+            Terms of Service
           </Link>
         </div>
       </div>
