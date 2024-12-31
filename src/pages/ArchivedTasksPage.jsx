@@ -89,8 +89,8 @@ const ArchivedTasksPage = () => {
 
   return (
     <div>
-      <nav className="flex w-full fixed top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
-        <div className="flex items-center gap-2 ">
+      <nav className="flex w-full fixed z-10 top-0 bg-neutral-800 shadow-md px-4 py-1 text-neutral-100 justify-between items-center">
+        <div className="flex items-center gap-2">
           <h1 className="text-2xl rubik-80s-fade-regular">
             <span className="text-sm text-green-500">On</span>Task
           </h1>
@@ -110,11 +110,10 @@ const ArchivedTasksPage = () => {
         </div>
       </nav>
 
-      {/* Check if there are no archived tasks */}
       {archivedTasks.length === 0 ? (
         <div className="flex justify-center items-center h-screen">
           <div className="text-center">
-            <h1 className="text-2xl text-neutral-100 mb-4">
+            <h1 className="text-xl text-neutral-100 mb-4">
               No archived tasks found.
             </h1>
             <button
@@ -126,8 +125,7 @@ const ArchivedTasksPage = () => {
           </div>
         </div>
       ) : (
-        // If there are archived tasks, display them
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 mt-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 mb-6 gap-6 p-6 mt-16">
           {archivedTasks.map((task) => (
             <div
               key={task.id}
@@ -165,7 +163,7 @@ const ArchivedTasksPage = () => {
                 )}
               </div>
 
-              <div className="flex justify-end items-center text-xl gap-4">
+              <div className="flex justify-end absolute right-2 bottom-2 items-center text-xl gap-2">
                 <div className="group relative flex items-center">
                   <button
                     onClick={() => handleUnarchiveTask(task.id)}
